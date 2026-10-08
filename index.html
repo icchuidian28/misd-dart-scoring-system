@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Cricket Darts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for dart marks (/, X, Ⓧ) */
+        .mark-0::after { content: "-"; color: #475569; }
+        .mark-1::after { content: "/"; }
+        .mark-2::after { content: "X"; }
+        .mark-3::after { content: "Ⓧ"; color: #22c55e; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto p-4 md:p-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-blue-400">Custom Cricket</h1>
+
+        <!-- Scoreboard -->
+        <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700 mb-8">
+            <div class="grid grid-cols-3 bg-gray-900 text-center p-4 border-b border-gray-700">
+                <div>
+                    <h2 class="text-xl font-bold text-blue-400">Player 1</h2>
+                    <p class="text-3xl font-mono mt-2" id="p1-score">0</p>
+                </div>
+                <div class="flex items-center justify-center">
+                    <span class="text-gray-400 uppercase tracking-widest text-sm">Targets</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-red-400">Player 2</h2>
+                    <p class="text-3xl font-mono mt-2" id="p2-score">0</p>
+                </div>
+            </div>
+
+            <div id="scoreboard-body" class="divide-y divide-gray-700 font-mono text-xl">
+                <!-- Rows injected by JS -->
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+            <div class="flex justify-center gap-4 mb-6">
+                <button onclick="setPlayer(1)" id="btn-p1" class="px-6 py-2 rounded-lg bg-blue-600 text-white font-bold ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-800">Player 1</button>
+                <button onclick="setPlayer(2)" id="btn-p2" class="px-6 py-2 rounded-lg bg-gray-700 text-gray-300 font-bold hover:bg-red-900 transition">Player 2</button>
+            </div>
+
+            <div class="grid grid-cols-5 md:grid-cols-10 gap-2 mb-6" id="target-buttons">
+                <!-- Target buttons injected by JS -->
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="hit-buttons">
+                <!-- Hit modifiers injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Core Scoring Logic ---
+        class CustomCricketScoring {
+            constructor() {
+                this.validTargets = [20, 19, 18, 17, 16, 15, 14, 13, 12, 25];
+                this.players = {
+                    1: this.initPlayer("Player 1"),
+                    2: this.initPlayer("Player 2")
+                };
+            }
+
+            initPlayer(name) {
+                let state = { name: name, score: 0, marks: {} };
+                this.validTargets.forEach(target => state.marks[target] = 0);
+                return state;
+            }
+
+            recordHit(playerId, target, hitType) {
+                let marksEarned = 0;
+                
+                if (target === 25) {
+                    if (hitType === 'outer') marksEarned = 1;
+                    if (hitType === 'inner') marksEarned = 2;
+                } else {
+                    if (hitType === 'double') marksEarned = 2;
+                    if (hitType === 'triple') marksEarned = 3;
+                }
+
+                if (marksEarned === 0) return;
+
+                const player = this.players[playerId];
+                const opponent = this.players[playerId === 1 ? 2 : 1];
+                const currentMarks = player.marks[target];
+                const marksNeededToClose = 3 - currentMarks;
+
+                if (currentMarks < 3) {
+                    player.marks[target] = Math.min(3, currentMarks + marksEarned);
+                    const overflowMarks = marksEarned - marksNeededToClose;
+                    if (overflowMarks > 0 && opponent.marks[target] < 3) {
+                        player.score += (overflowMarks * target);
+                    }
+                } else {
+                    if (opponent.marks[target] < 3) {
+                        player.score += (marksEarned * target);
+                    }
+                }
+            }
+        }
+
+        // --- UI State & DOM Manipulation ---
+        let game = new CustomCricketScoring();
+        let currentPlayer = 1;
+        let selectedTarget = 20;
+
+        function renderScoreboard() {
+            const tbody = document.getElementById('scoreboard-body');
+            tbody.innerHTML = '';
+            
+            game.validTargets.forEach(target => {
+                const p1Marks = game.players[1].marks[target];
+                const p2Marks = game.players[2].marks[target];
+                const targetLabel = target === 25 ? 'BULL' : target;
+                
+                tbody.innerHTML += `
+                    <div class="grid grid-cols-3 text-center p-3 hover:bg-gray-750 transition">
+                        <div class="text-blue-400 font-bold mark-${p1Marks}"></div>
+                        <div class="font-bold text-gray-300">${targetLabel}</div>
+                        <div class="text-red-400 font-bold mark-${p2Marks}"></div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('p1-score').innerText = game.players[1].score;
+            document.getElementById('p2-score').innerText = game.players[2].score;
+        }
+
+        function setPlayer(id) {
+            currentPlayer = id;
+            document.getElementById('btn-p1').className = `px-6 py-2 rounded-lg font-bold transition ${id === 1 ? 'bg-blue-600 text-white ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-800' : 'bg-gray-700 text-gray-300 hover:bg-blue-900'}`;
+            document.getElementById('btn-p2').className = `px-6 py-2 rounded-lg font-bold transition ${id === 2 ? 'bg-red-600 text-white ring-2 ring-red-400 ring-offset-2 ring-offset-gray-800' : 'bg-gray-700 text-gray-300 hover:bg-red-900'}`;
+        }
+
+        function setTarget(t) {
+            selectedTarget = t;
+            renderControls();
+        }
+
+        function logHit(hitType) {
+            game.recordHit(currentPlayer, selectedTarget, hitType);
+            renderScoreboard();
+        }
+
+        function renderControls() {
+            const targetContainer = document.getElementById('target-buttons');
+            targetContainer.innerHTML = '';
+            game.validTargets.forEach(t => {
+                const label = t === 25 ? 'B' : t;
+                const activeClasses = t === selectedTarget ? 'bg-gray-100 text-gray-900 font-bold' : 'bg-gray-700 text-gray-300 hover:bg-gray-600';
+                targetContainer.innerHTML += `<button onclick="setTarget(${t})" class="py-2 rounded ${activeClasses}">${label}</button>`;
+            });
+
+            const hitContainer = document.getElementById('hit-buttons');
+            if (selectedTarget === 25) {
+                hitContainer.innerHTML = `
+                    <button onclick="logHit('outer')" class="col-span-2 py-4 bg-green-700 hover:bg-green-600 rounded-lg font-bold">Outer Bull (1 Mk)</button>
+                    <button onclick="logHit('inner')" class="col-span-2 py-4 bg-red-700 hover:bg-red-600 rounded-lg font-bold">Inner Bull (2 Mks)</button>
+                `;
+            } else {
+                hitContainer.innerHTML = `
+                    <button class="py-4 bg-gray-800 text-gray-500 rounded-lg cursor-not-allowed">Single (Break)</button>
+                    <button onclick="logHit('double')" class="py-4 bg-green-700 hover:bg-green-600 rounded-lg font-bold">Double</button>
+                    <button onclick="logHit('triple')" class="col-span-2 py-4 bg-red-700 hover:bg-red-600 rounded-lg font-bold">Triple</button>
+                `;
+            }
+        }
+
+        // Initialize App
+        renderScoreboard();
+        renderControls();
+    </script>
+</body>
+</html>
