@@ -50,7 +50,6 @@
                     <button onclick="setPlayer(1)" id="btn-p1" class="px-6 py-2 rounded-lg bg-blue-600 text-white font-bold ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-800">Player 1</button>
                     <button onclick="setPlayer(2)" id="btn-p2" class="px-6 py-2 rounded-lg bg-gray-700 text-gray-300 font-bold hover:bg-red-900 transition">Player 2</button>
                 </div>
-                <!-- Undo Button Added Here -->
                 <button onclick="undoHit()" id="btn-undo" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex gap-2 items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
                     Undo
@@ -61,7 +60,7 @@
                 <!-- Target buttons injected by JS -->
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="hit-buttons">
+            <div class="grid grid-cols-3 md:grid-cols-3 gap-4" id="hit-buttons">
                 <!-- Hit modifiers injected by JS -->
             </div>
         </div>
@@ -72,7 +71,7 @@
         class CustomCricketScoring {
             constructor() {
                 this.validTargets = [20, 19, 18, 17, 16, 15, 14, 13, 12, 25];
-                this.history = []; // Added history array for Undo
+                this.history = [];
                 this.players = {
                     1: this.initPlayer("Player 1"),
                     2: this.initPlayer("Player 2")
@@ -85,12 +84,10 @@
                 return state;
             }
 
-            // Save state before modifying
             saveState() {
                 this.history.push(JSON.parse(JSON.stringify(this.players)));
             }
 
-            // Revert to previous state
             undoLastHit() {
                 if (this.history.length > 0) {
                     this.players = this.history.pop();
@@ -100,6 +97,10 @@
             }
 
             recordHit(playerId, target, hitType) {
+                const player = this.players[playerId];
+                const opponent = this.players[playerId === 1 ? 2 : 1];
+                const currentMarks = player.marks[target];
+                
                 let marksEarned = 0;
                 
                 if (target === 25) {
@@ -108,25 +109,33 @@
                 } else {
                     if (hitType === 'double') marksEarned = 2;
                     if (hitType === 'triple') marksEarned = 3;
+                    if (hitType === 'single') {
+                        // NEW RULE: If player has marks (e.g. from a double) but hasn't closed it yet,
+                        // a single will give 1 mark to help close it. Otherwise, it gives 0 marks.
+                        if (currentMarks > 0 && currentMarks < 3) {
+                            marksEarned = 1;
+                        } else {
+                            marksEarned = 0; 
+                        }
+                    }
                 }
 
-                if (marksEarned === 0) return;
+                if (marksEarned === 0) return; // Break (No marks, no score)
 
-                // Save state right before applying the hit
                 this.saveState();
 
-                const player = this.players[playerId];
-                const opponent = this.players[playerId === 1 ? 2 : 1];
-                const currentMarks = player.marks[target];
                 const marksNeededToClose = 3 - currentMarks;
 
                 if (currentMarks < 3) {
                     player.marks[target] = Math.min(3, currentMarks + marksEarned);
                     const overflowMarks = marksEarned - marksNeededToClose;
+                    
+                    // Score points if there is overflow AND opponent hasn't closed it
                     if (overflowMarks > 0 && opponent.marks[target] < 3) {
                         player.score += (overflowMarks * target);
                     }
                 } else {
+                    // Target already closed. Convert all new marks to points if opponent is open.
                     if (opponent.marks[target] < 3) {
                         player.score += (marksEarned * target);
                     }
@@ -160,7 +169,6 @@
             document.getElementById('p1-score').innerText = game.players[1].score;
             document.getElementById('p2-score').innerText = game.players[2].score;
 
-            // Manage Undo Button state
             const undoBtn = document.getElementById('btn-undo');
             if (game.history.length === 0) {
                 undoBtn.setAttribute('disabled', 'true');
@@ -185,14 +193,12 @@
             renderScoreboard();
         }
 
-        // New Undo Function
         function undoHit() {
             if (game.undoLastHit()) {
                 renderScoreboard();
             }
         }
 
-        // New Reset Function
         function resetGame() {
             if(confirm("Are you sure you want to reset the game? All scores will be lost.")) {
                 game = new CustomCricketScoring();
@@ -212,14 +218,15 @@
             const hitContainer = document.getElementById('hit-buttons');
             if (selectedTarget === 25) {
                 hitContainer.innerHTML = `
-                    <button onclick="logHit('outer')" class="col-span-2 py-4 bg-green-700 hover:bg-green-600 rounded-lg font-bold shadow-md">Outer Bull (1 Mk)</button>
-                    <button onclick="logHit('inner')" class="col-span-2 py-4 bg-red-700 hover:bg-red-600 rounded-lg font-bold shadow-md">Inner Bull (2 Mks)</button>
+                    <button onclick="logHit('outer')" class="col-span-3 md:col-span-1 py-4 bg-green-700 hover:bg-green-600 rounded-lg font-bold shadow-md">Outer Bull (1 Mk)</button>
+                    <button onclick="logHit('inner')" class="col-span-3 md:col-span-2 py-4 bg-red-700 hover:bg-red-600 rounded-lg font-bold shadow-md">Inner Bull (2 Mks)</button>
                 `;
             } else {
                 hitContainer.innerHTML = `
-                    <button class="py-4 bg-gray-800 text-gray-500 rounded-lg cursor-not-allowed">Single (Break)</button>
+                    <!-- Single button is now active -->
+                    <button onclick="logHit('single')" class="py-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold shadow-md">Single</button>
                     <button onclick="logHit('double')" class="py-4 bg-green-700 hover:bg-green-600 rounded-lg font-bold shadow-md">Double</button>
-                    <button onclick="logHit('triple')" class="col-span-2 py-4 bg-red-700 hover:bg-red-600 rounded-lg font-bold shadow-md">Triple</button>
+                    <button onclick="logHit('triple')" class="py-4 bg-red-700 hover:bg-red-600 rounded-lg font-bold shadow-md">Triple</button>
                 `;
             }
         }
