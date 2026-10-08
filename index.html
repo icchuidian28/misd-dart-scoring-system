@@ -17,30 +17,18 @@
     <!-- HOME SCREEN -->
     <div id="home-screen" class="max-w-md mx-auto mt-12 md:mt-24 p-6 md:p-8 bg-gray-800 rounded-xl shadow-lg border border-gray-700 text-center">
         <h1 class="text-4xl font-bold text-blue-400 mb-2">Custom Cricket</h1>
-        <p class="text-gray-400 mb-8">Select your players to begin</p>
+        <p class="text-gray-400 mb-8">Enter player names to begin</p>
 
         <div class="mb-6 text-left">
             <label class="block text-gray-300 mb-2 font-bold text-sm uppercase tracking-wide">Player 1 (Blue)</label>
-            <select id="p1-select" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl font-bold appearance-none">
-                <option value="Alvin">Alvin</option>
-                <option value="Tim">Tim</option>
-                <option value="Onats">Onats</option>
-                <option value="Ron">Ron</option>
-                <option value="Royce">Royce</option>
-                <option value="Tolits">Tolits</option>
-            </select>
+            <!-- Changed to text input -->
+            <input type="text" id="p1-input" placeholder="e.g. Alvin" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl font-bold" autocomplete="off">
         </div>
 
         <div class="mb-10 text-left">
             <label class="block text-gray-300 mb-2 font-bold text-sm uppercase tracking-wide">Player 2 (Red)</label>
-            <select id="p2-select" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-400 text-xl font-bold appearance-none">
-                <option value="Tim" selected>Tim</option> <!-- Default to Tim so it's different -->
-                <option value="Alvin">Alvin</option>
-                <option value="Onats">Onats</option>
-                <option value="Ron">Ron</option>
-                <option value="Royce">Royce</option>
-                <option value="Tolits">Tolits</option>
-            </select>
+            <!-- Changed to text input -->
+            <input type="text" id="p2-input" placeholder="e.g. Tim" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-400 text-xl font-bold" autocomplete="off">
         </div>
 
         <button onclick="startGame()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold text-xl shadow-lg transition transform hover:scale-105">
@@ -64,14 +52,14 @@
             <div class="lg:col-span-5 bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700">
                 <div class="grid grid-cols-3 bg-gray-900 text-center p-4 border-b border-gray-700">
                     <div>
-                        <h2 id="p1-name" class="text-xl font-bold text-blue-400">Player 1</h2>
+                        <h2 id="p1-name" class="text-xl font-bold text-blue-400 truncate">Player 1</h2>
                         <p class="text-4xl font-mono mt-2" id="p1-score">0</p>
                     </div>
                     <div class="flex items-center justify-center">
                         <span class="text-gray-400 uppercase tracking-widest text-sm">Targets</span>
                     </div>
-                    <div>
-                        <h2 id="p2-name" class="text-xl font-bold text-red-400">Player 2</h2>
+                    <div class="overflow-hidden">
+                        <h2 id="p2-name" class="text-xl font-bold text-red-400 truncate">Player 2</h2>
                         <p class="text-4xl font-mono mt-2" id="p2-score">0</p>
                     </div>
                 </div>
@@ -84,11 +72,11 @@
             <!-- Control Panel Section (Right Side) -->
             <div class="lg:col-span-7 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg lg:sticky lg:top-8">
                 <div class="flex justify-between items-center mb-8">
-                    <div class="flex gap-4">
-                        <button onclick="setPlayer(1)" id="btn-p1" class="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-800 text-lg">Player 1</button>
-                        <button onclick="setPlayer(2)" id="btn-p2" class="px-6 py-3 rounded-lg bg-gray-700 text-gray-300 font-bold hover:bg-red-900 transition text-lg">Player 2</button>
+                    <div class="flex gap-4 max-w-[70%]">
+                        <button onclick="setPlayer(1)" id="btn-p1" class="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-800 text-lg truncate max-w-[150px]">Player 1</button>
+                        <button onclick="setPlayer(2)" id="btn-p2" class="px-6 py-3 rounded-lg bg-gray-700 text-gray-300 font-bold hover:bg-red-900 transition text-lg truncate max-w-[150px]">Player 2</button>
                     </div>
-                    <button onclick="undoHit()" id="btn-undo" class="px-5 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex gap-2 items-center shadow-md">
+                    <button onclick="undoHit()" id="btn-undo" class="px-5 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex gap-2 items-center shadow-md shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
                         Undo
                     </button>
@@ -184,41 +172,53 @@
         let currentPlayer = 1;
         let selectedTarget = 20;
 
-        // Function called when "Start Match" is clicked on the Home Screen
-        function startGame() {
-            const p1 = document.getElementById('p1-select').value;
-            const p2 = document.getElementById('p2-select').value;
+        // Add 'Enter' key support for the input fields
+        document.getElementById('p1-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') document.getElementById('p2-input').focus();
+        });
+        document.getElementById('p2-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') startGame();
+        });
 
-            if (p1 === p2) {
-                alert("Please select two different players!");
+        // Function called when "Start Match" is clicked
+        function startGame() {
+            const p1 = document.getElementById('p1-input').value.trim();
+            const p2 = document.getElementById('p2-input').value.trim();
+
+            if (p1 === "" || p2 === "") {
+                alert("Please enter names for both players.");
                 return;
             }
 
-            // Initialize game with selected names
+            if (p1.toLowerCase() === p2.toLowerCase()) {
+                alert("Please enter two different player names!");
+                return;
+            }
+
             game = new CustomCricketScoring(p1, p2);
             currentPlayer = 1;
             selectedTarget = 20;
 
-            // Update UI text to show chosen names
             document.getElementById('p1-name').innerText = p1;
             document.getElementById('p2-name').innerText = p2;
             document.getElementById('btn-p1').innerText = p1;
             document.getElementById('btn-p2').innerText = p2;
 
-            // Hide home screen, show game screen
             document.getElementById('home-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
 
             renderScoreboard();
             renderControls();
-            setPlayer(1); // Set Player 1 as active by default
+            setPlayer(1); 
         }
 
-        // Returns to the home screen
         function endGame() {
             if(confirm("Are you sure you want to end this game and return to the home screen?")) {
                 document.getElementById('game-screen').classList.add('hidden');
                 document.getElementById('home-screen').classList.remove('hidden');
+                // Optional: clear inputs
+                // document.getElementById('p1-input').value = "";
+                // document.getElementById('p2-input').value = "";
             }
         }
 
@@ -253,8 +253,8 @@
 
         function setPlayer(id) {
             currentPlayer = id;
-            document.getElementById('btn-p1').className = `px-6 py-3 rounded-lg font-bold transition text-lg ${id === 1 ? 'bg-blue-600 text-white ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-800 shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-blue-900'}`;
-            document.getElementById('btn-p2').className = `px-6 py-3 rounded-lg font-bold transition text-lg ${id === 2 ? 'bg-red-600 text-white ring-2 ring-red-400 ring-offset-2 ring-offset-gray-800 shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-red-900'}`;
+            document.getElementById('btn-p1').className = `px-6 py-3 rounded-lg font-bold transition text-lg truncate max-w-[150px] ${id === 1 ? 'bg-blue-600 text-white ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-800 shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-blue-900'}`;
+            document.getElementById('btn-p2').className = `px-6 py-3 rounded-lg font-bold transition text-lg truncate max-w-[150px] ${id === 2 ? 'bg-red-600 text-white ring-2 ring-red-400 ring-offset-2 ring-offset-gray-800 shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-red-900'}`;
         }
 
         function setTarget(t) {
