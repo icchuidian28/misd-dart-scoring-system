@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Cricket Darts</title>
+    <title>Pro Darts Scoring</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .mark-0::after { content: "-"; color: #475569; }
@@ -16,18 +16,25 @@
 
     <!-- HOME SCREEN -->
     <div id="home-screen" class="max-w-md mx-auto mt-12 md:mt-24 p-6 md:p-8 bg-gray-800 rounded-xl shadow-lg border border-gray-700 text-center">
-        <h1 class="text-4xl font-bold text-blue-400 mb-2">Custom Cricket</h1>
-        <p class="text-gray-400 mb-8">Enter player names to begin</p>
+        <h1 class="text-4xl font-bold text-blue-400 mb-2">Dart Scorer</h1>
+        <p class="text-gray-400 mb-8">Set up your match to begin</p>
+
+        <div class="mb-6 text-left">
+            <label class="block text-gray-300 mb-2 font-bold text-sm uppercase tracking-wide">Game Mode</label>
+            <select id="game-mode" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl font-bold appearance-none">
+                <option value="cricket">Custom Cricket</option>
+                <option value="501">501</option>
+                <option value="201">201</option>
+            </select>
+        </div>
 
         <div class="mb-6 text-left">
             <label class="block text-gray-300 mb-2 font-bold text-sm uppercase tracking-wide">Player 1 (Blue)</label>
-            <!-- Changed to text input -->
             <input type="text" id="p1-input" placeholder="e.g. Alvin" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl font-bold" autocomplete="off">
         </div>
 
         <div class="mb-10 text-left">
             <label class="block text-gray-300 mb-2 font-bold text-sm uppercase tracking-wide">Player 2 (Red)</label>
-            <!-- Changed to text input -->
             <input type="text" id="p2-input" placeholder="e.g. Tim" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-400 text-xl font-bold" autocomplete="off">
         </div>
 
@@ -39,7 +46,7 @@
     <!-- GAME SCREEN (Hidden by default) -->
     <div id="game-screen" class="max-w-6xl mx-auto p-4 md:p-8 hidden">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-400">Custom Cricket</h1>
+            <h1 class="text-3xl font-bold text-blue-400" id="game-title">Custom Cricket</h1>
             <button onclick="endGame()" class="px-4 py-2 bg-red-900 hover:bg-red-700 text-red-100 rounded-lg text-sm font-bold transition shadow-md">
                 End Game
             </button>
@@ -56,7 +63,7 @@
                         <p class="text-4xl font-mono mt-2" id="p1-score">0</p>
                     </div>
                     <div class="flex items-center justify-center">
-                        <span class="text-gray-400 uppercase tracking-widest text-sm">Targets</span>
+                        <span id="scoreboard-center-label" class="text-gray-400 uppercase tracking-widest text-sm">Targets</span>
                     </div>
                     <div class="overflow-hidden">
                         <h2 id="p2-name" class="text-xl font-bold text-red-400 truncate">Player 2</h2>
@@ -82,7 +89,7 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-5 gap-3 mb-8" id="target-buttons">
+                <div id="target-buttons">
                     <!-- Target buttons injected by JS -->
                 </div>
 
@@ -91,13 +98,14 @@
                 </div>
             </div>
 
-        </div> <!-- End of Grid -->
+        </div>
     </div>
 
     <script>
-        // --- Core Scoring Logic ---
+        // --- Custom Cricket Logic ---
         class CustomCricketScoring {
             constructor(p1Name, p2Name) {
+                this.mode = 'cricket';
                 this.validTargets = [20, 19, 18, 17, 16, 15, 14, 13, 12, 25];
                 this.history = [];
                 this.players = {
@@ -112,9 +120,7 @@
                 return state;
             }
 
-            saveState() {
-                this.history.push(JSON.parse(JSON.stringify(this.players)));
-            }
+            saveState() { this.history.push(JSON.parse(JSON.stringify(this.players))); }
 
             undoLastHit() {
                 if (this.history.length > 0) {
@@ -138,30 +144,108 @@
                     if (hitType === 'double') marksEarned = 2;
                     if (hitType === 'triple') marksEarned = 3;
                     if (hitType === 'single') {
-                        if (currentMarks > 0 && currentMarks < 3) {
-                            marksEarned = 1;
-                        } else {
-                            marksEarned = 0; 
-                        }
+                        if (currentMarks > 0 && currentMarks < 3) marksEarned = 1;
+                        else marksEarned = 0; 
                     }
                 }
 
                 if (marksEarned === 0) return; 
 
                 this.saveState();
-
                 const marksNeededToClose = 3 - currentMarks;
 
                 if (currentMarks < 3) {
                     player.marks[target] = Math.min(3, currentMarks + marksEarned);
                     const overflowMarks = marksEarned - marksNeededToClose;
-                    
-                    if (overflowMarks > 0 && opponent.marks[target] < 3) {
-                        player.score += (overflowMarks * target);
-                    }
+                    if (overflowMarks > 0 && opponent.marks[target] < 3) player.score += (overflowMarks * target);
                 } else {
-                    if (opponent.marks[target] < 3) {
-                        player.score += (marksEarned * target);
+                    if (opponent.marks[target] < 3) player.score += (marksEarned * target);
+                }
+            }
+        }
+
+        // --- 501 / 201 X01 Logic ---
+        class X01Scoring {
+            constructor(p1Name, p2Name, startingScore) {
+                this.mode = 'X01';
+                this.startingScore = startingScore;
+                this.validTargets = [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 25, 0];
+                this.history = [];
+                this.currentPlayer = 1;
+                this.dartsThrown = 0;
+                this.players = {
+                    1: { name: p1Name, score: startingScore, turnStartScore: startingScore, winner: false },
+                    2: { name: p2Name, score: startingScore, turnStartScore: startingScore, winner: false }
+                };
+            }
+
+            saveState() {
+                this.history.push(JSON.parse(JSON.stringify({
+                    players: this.players,
+                    currentPlayer: this.currentPlayer,
+                    dartsThrown: this.dartsThrown
+                })));
+            }
+
+            undoLastHit() {
+                if (this.history.length > 0) {
+                    const state = this.history.pop();
+                    this.players = state.players;
+                    this.currentPlayer = state.currentPlayer;
+                    this.dartsThrown = state.dartsThrown;
+                    return true;
+                }
+                return false;
+            }
+
+            endTurn(forcePlayerId = null) {
+                this.players[this.currentPlayer].turnStartScore = this.players[this.currentPlayer].score;
+                this.currentPlayer = forcePlayerId ? forcePlayerId : (this.currentPlayer === 1 ? 2 : 1);
+                this.dartsThrown = 0;
+                this.players[this.currentPlayer].turnStartScore = this.players[this.currentPlayer].score;
+            }
+
+            recordHit(playerId, target, hitType) {
+                if (this.players[1].winner || this.players[2].winner) return;
+
+                this.saveState();
+                
+                // Manual player switch override
+                if (playerId !== this.currentPlayer) {
+                    this.endTurn(playerId);
+                }
+
+                const player = this.players[this.currentPlayer];
+                let multiplier = 0;
+
+                if (target === 25) {
+                    if (hitType === 'outer') multiplier = 1; // Outer = 25 pts (Treating outer bull as single 25 in 501)
+                    if (hitType === 'inner') multiplier = 2; // Inner = 50 pts
+                } else if (target === 0) {
+                    multiplier = 0;
+                } else {
+                    if (hitType === 'single') multiplier = 1;
+                    if (hitType === 'double') multiplier = 2;
+                    if (hitType === 'triple') multiplier = 3;
+                }
+
+                const points = target * multiplier;
+                const newScore = player.score - points;
+                this.dartsThrown++;
+
+                if (newScore < 0) {
+                    // Bust - Over the balance
+                    player.score = player.turnStartScore;
+                    this.endTurn();
+                } else if (newScore === 0) {
+                    // Win!
+                    player.score = 0;
+                    player.winner = true;
+                } else {
+                    // Valid hit
+                    player.score = newScore;
+                    if (this.dartsThrown >= 3) {
+                        this.endTurn();
                     }
                 }
             }
@@ -172,7 +256,6 @@
         let currentPlayer = 1;
         let selectedTarget = 20;
 
-        // Add 'Enter' key support for the input fields
         document.getElementById('p1-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') document.getElementById('p2-input').focus();
         });
@@ -180,22 +263,25 @@
             if (e.key === 'Enter') startGame();
         });
 
-        // Function called when "Start Match" is clicked
         function startGame() {
+            const mode = document.getElementById('game-mode').value;
             const p1 = document.getElementById('p1-input').value.trim();
             const p2 = document.getElementById('p2-input').value.trim();
 
-            if (p1 === "" || p2 === "") {
-                alert("Please enter names for both players.");
-                return;
-            }
+            if (p1 === "" || p2 === "") return alert("Please enter names for both players.");
+            if (p1.toLowerCase() === p2.toLowerCase()) return alert("Please enter two different player names!");
 
-            if (p1.toLowerCase() === p2.toLowerCase()) {
-                alert("Please enter two different player names!");
-                return;
+            if (mode === 'cricket') {
+                game = new CustomCricketScoring(p1, p2);
+                document.getElementById('game-title').innerText = "Custom Cricket";
+            } else if (mode === '501') {
+                game = new X01Scoring(p1, p2, 501);
+                document.getElementById('game-title').innerText = "501";
+            } else if (mode === '201') {
+                game = new X01Scoring(p1, p2, 201);
+                document.getElementById('game-title').innerText = "201";
             }
-
-            game = new CustomCricketScoring(p1, p2);
+            
             currentPlayer = 1;
             selectedTarget = 20;
 
@@ -216,39 +302,66 @@
             if(confirm("Are you sure you want to end this game and return to the home screen?")) {
                 document.getElementById('game-screen').classList.add('hidden');
                 document.getElementById('home-screen').classList.remove('hidden');
-                // Optional: clear inputs
-                // document.getElementById('p1-input').value = "";
-                // document.getElementById('p2-input').value = "";
             }
         }
 
         function renderScoreboard() {
-            const tbody = document.getElementById('scoreboard-body');
-            tbody.innerHTML = '';
-            
-            game.validTargets.forEach(target => {
-                const p1Marks = game.players[1].marks[target];
-                const p2Marks = game.players[2].marks[target];
-                const targetLabel = target === 25 ? 'BULL' : target;
-                
-                tbody.innerHTML += `
-                    <div class="grid grid-cols-3 text-center p-3 hover:bg-gray-750 transition items-center">
-                        <div class="text-blue-400 font-bold mark-${p1Marks}"></div>
-                        <div class="font-bold text-gray-300">${targetLabel}</div>
-                        <div class="text-red-400 font-bold mark-${p2Marks}"></div>
-                    </div>
-                `;
-            });
-
             document.getElementById('p1-score').innerText = game.players[1].score;
             document.getElementById('p2-score').innerText = game.players[2].score;
+            
+            const tbody = document.getElementById('scoreboard-body');
+            tbody.innerHTML = '';
+
+            if (game.mode === 'cricket') {
+                document.getElementById('scoreboard-center-label').innerText = 'Targets';
+                game.validTargets.forEach(target => {
+                    const p1Marks = game.players[1].marks[target];
+                    const p2Marks = game.players[2].marks[target];
+                    const targetLabel = target === 25 ? 'BULL' : target;
+                    
+                    tbody.innerHTML += `
+                        <div class="grid grid-cols-3 text-center p-3 hover:bg-gray-750 transition items-center">
+                            <div class="text-blue-400 font-bold mark-${p1Marks}"></div>
+                            <div class="font-bold text-gray-300">${targetLabel}</div>
+                            <div class="text-red-400 font-bold mark-${p2Marks}"></div>
+                        </div>
+                    `;
+                });
+            } else {
+                // X01 Scoreboard layout
+                document.getElementById('scoreboard-center-label').innerText = 'Score';
+                
+                const p1Winner = game.players[1].winner;
+                const p2Winner = game.players[2].winner;
+
+                if (p1Winner || p2Winner) {
+                    const winnerName = p1Winner ? game.players[1].name : game.players[2].name;
+                    tbody.innerHTML = `
+                        <div class="p-8 text-center bg-green-900 h-full flex flex-col justify-center items-center">
+                            <span class="text-5xl mb-4">🏆</span>
+                            <h2 class="text-4xl font-bold text-white">${winnerName} WINS!</h2>
+                        </div>
+                    `;
+                } else {
+                    let dartsDots = '';
+                    for(let i=0; i<3; i++) { dartsDots += i < game.dartsThrown ? '🔴 ' : '⚪ '; }
+
+                    const activeColor = game.currentPlayer === 1 ? 'text-blue-400' : 'text-red-400';
+                    tbody.innerHTML = `
+                        <div class="p-8 text-center flex flex-col justify-center items-center h-64">
+                            <div class="text-xl text-gray-400 mb-2 uppercase tracking-widest font-sans">Current Turn</div>
+                            <div class="text-4xl font-bold mb-6 ${activeColor}">${game.players[game.currentPlayer].name}</div>
+                            <div class="text-2xl text-gray-300 font-sans bg-gray-900 py-3 px-6 rounded-full shadow-inner border border-gray-700">
+                                Darts Thrown: <span class="ml-2 tracking-widest">${dartsDots}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
 
             const undoBtn = document.getElementById('btn-undo');
-            if (game.history.length === 0) {
-                undoBtn.setAttribute('disabled', 'true');
-            } else {
-                undoBtn.removeAttribute('disabled');
-            }
+            if (game.history.length === 0) undoBtn.setAttribute('disabled', 'true');
+            else undoBtn.removeAttribute('disabled');
         }
 
         function setPlayer(id) {
@@ -264,29 +377,52 @@
 
         function logHit(hitType) {
             game.recordHit(currentPlayer, selectedTarget, hitType);
+            
+            // X01 manages its own turns, so we sync the UI toggle buttons to match the engine
+            if (game.mode === 'X01') {
+                setPlayer(game.currentPlayer);
+            }
+            
             renderScoreboard();
         }
 
         function undoHit() {
             if (game.undoLastHit()) {
+                if (game.mode === 'X01') setPlayer(game.currentPlayer);
                 renderScoreboard();
             }
         }
 
         function renderControls() {
             const targetContainer = document.getElementById('target-buttons');
+            
+            // Adjust grid layout based on number of buttons
+            targetContainer.className = game.mode === 'cricket' 
+                ? 'grid grid-cols-5 gap-3 mb-8' 
+                : 'grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2 mb-6';
+            
             targetContainer.innerHTML = '';
+            
             game.validTargets.forEach(t => {
-                const label = t === 25 ? 'BULL' : t;
+                let label = t;
+                if (t === 25) label = 'BULL';
+                if (t === 0) label = 'MISS';
+
+                const py = game.mode === 'cricket' ? 'py-4 text-xl' : 'py-3 text-lg';
                 const activeClasses = t === selectedTarget ? 'bg-gray-100 text-gray-900 font-bold shadow-lg scale-105' : 'bg-gray-700 text-gray-300 hover:bg-gray-600';
-                targetContainer.innerHTML += `<button onclick="setTarget(${t})" class="py-4 text-xl rounded-lg transition-transform ${activeClasses}">${label}</button>`;
+                targetContainer.innerHTML += `<button onclick="setTarget(${t})" class="${py} rounded-lg transition-transform ${activeClasses}">${label}</button>`;
             });
 
             const hitContainer = document.getElementById('hit-buttons');
+            
             if (selectedTarget === 25) {
                 hitContainer.innerHTML = `
-                    <button onclick="logHit('outer')" class="col-span-3 lg:col-span-1 py-6 text-xl bg-green-700 hover:bg-green-600 rounded-lg font-bold shadow-lg transition">Outer (1 Mk)</button>
-                    <button onclick="logHit('inner')" class="col-span-3 lg:col-span-2 py-6 text-xl bg-red-700 hover:bg-red-600 rounded-lg font-bold shadow-lg transition">Inner (2 Mks)</button>
+                    <button onclick="logHit('outer')" class="col-span-3 lg:col-span-1 py-6 text-xl bg-green-700 hover:bg-green-600 rounded-lg font-bold shadow-lg transition">Outer (25)</button>
+                    <button onclick="logHit('inner')" class="col-span-3 lg:col-span-2 py-6 text-xl bg-red-700 hover:bg-red-600 rounded-lg font-bold shadow-lg transition">Inner (50)</button>
+                `;
+            } else if (selectedTarget === 0) {
+                hitContainer.innerHTML = `
+                    <button onclick="logHit('single')" class="col-span-3 py-6 text-xl bg-gray-600 hover:bg-gray-500 rounded-lg font-bold shadow-lg transition">Record Miss (0 pts)</button>
                 `;
             } else {
                 hitContainer.innerHTML = `
