@@ -14,30 +14,64 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
 
-    <!-- Increased max-width to allow room for side-by-side layout -->
-    <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="max-w-md mx-auto mt-12 md:mt-24 p-6 md:p-8 bg-gray-800 rounded-xl shadow-lg border border-gray-700 text-center">
+        <h1 class="text-4xl font-bold text-blue-400 mb-2">Custom Cricket</h1>
+        <p class="text-gray-400 mb-8">Select your players to begin</p>
+
+        <div class="mb-6 text-left">
+            <label class="block text-gray-300 mb-2 font-bold text-sm uppercase tracking-wide">Player 1 (Blue)</label>
+            <select id="p1-select" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl font-bold appearance-none">
+                <option value="Alvin">Alvin</option>
+                <option value="Tim">Tim</option>
+                <option value="Onats">Onats</option>
+                <option value="Ron">Ron</option>
+                <option value="Royce">Royce</option>
+                <option value="Tolits">Tolits</option>
+            </select>
+        </div>
+
+        <div class="mb-10 text-left">
+            <label class="block text-gray-300 mb-2 font-bold text-sm uppercase tracking-wide">Player 2 (Red)</label>
+            <select id="p2-select" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-400 text-xl font-bold appearance-none">
+                <option value="Tim" selected>Tim</option> <!-- Default to Tim so it's different -->
+                <option value="Alvin">Alvin</option>
+                <option value="Onats">Onats</option>
+                <option value="Ron">Ron</option>
+                <option value="Royce">Royce</option>
+                <option value="Tolits">Tolits</option>
+            </select>
+        </div>
+
+        <button onclick="startGame()" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold text-xl shadow-lg transition transform hover:scale-105">
+            Start Match
+        </button>
+    </div>
+
+    <!-- GAME SCREEN (Hidden by default) -->
+    <div id="game-screen" class="max-w-6xl mx-auto p-4 md:p-8 hidden">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-blue-400">Custom Cricket</h1>
-            <button onclick="resetGame()" class="px-4 py-2 bg-red-900 hover:bg-red-700 text-red-100 rounded-lg text-sm font-bold transition shadow-md">
-                Reset Game
+            <button onclick="endGame()" class="px-4 py-2 bg-red-900 hover:bg-red-700 text-red-100 rounded-lg text-sm font-bold transition shadow-md">
+                End Game
             </button>
         </div>
 
-        <!-- Layout Grid: 1 column on mobile, 2 columns (side-by-side) on lg screens -->
+        <!-- Layout Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <!-- Scoreboard Section (Left Side - spans 5 columns) -->
+            <!-- Scoreboard Section (Left Side) -->
             <div class="lg:col-span-5 bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700">
                 <div class="grid grid-cols-3 bg-gray-900 text-center p-4 border-b border-gray-700">
                     <div>
-                        <h2 class="text-xl font-bold text-blue-400">Player 1</h2>
+                        <h2 id="p1-name" class="text-xl font-bold text-blue-400">Player 1</h2>
                         <p class="text-4xl font-mono mt-2" id="p1-score">0</p>
                     </div>
                     <div class="flex items-center justify-center">
                         <span class="text-gray-400 uppercase tracking-widest text-sm">Targets</span>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-red-400">Player 2</h2>
+                        <h2 id="p2-name" class="text-xl font-bold text-red-400">Player 2</h2>
                         <p class="text-4xl font-mono mt-2" id="p2-score">0</p>
                     </div>
                 </div>
@@ -47,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- Control Panel Section (Right Side - spans 7 columns) -->
+            <!-- Control Panel Section (Right Side) -->
             <div class="lg:col-span-7 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg lg:sticky lg:top-8">
                 <div class="flex justify-between items-center mb-8">
                     <div class="flex gap-4">
@@ -75,12 +109,12 @@
     <script>
         // --- Core Scoring Logic ---
         class CustomCricketScoring {
-            constructor() {
+            constructor(p1Name, p2Name) {
                 this.validTargets = [20, 19, 18, 17, 16, 15, 14, 13, 12, 25];
                 this.history = [];
                 this.players = {
-                    1: this.initPlayer("Player 1"),
-                    2: this.initPlayer("Player 2")
+                    1: this.initPlayer(p1Name),
+                    2: this.initPlayer(p2Name)
                 };
             }
 
@@ -146,9 +180,47 @@
         }
 
         // --- UI State & DOM Manipulation ---
-        let game = new CustomCricketScoring();
+        let game;
         let currentPlayer = 1;
         let selectedTarget = 20;
+
+        // Function called when "Start Match" is clicked on the Home Screen
+        function startGame() {
+            const p1 = document.getElementById('p1-select').value;
+            const p2 = document.getElementById('p2-select').value;
+
+            if (p1 === p2) {
+                alert("Please select two different players!");
+                return;
+            }
+
+            // Initialize game with selected names
+            game = new CustomCricketScoring(p1, p2);
+            currentPlayer = 1;
+            selectedTarget = 20;
+
+            // Update UI text to show chosen names
+            document.getElementById('p1-name').innerText = p1;
+            document.getElementById('p2-name').innerText = p2;
+            document.getElementById('btn-p1').innerText = p1;
+            document.getElementById('btn-p2').innerText = p2;
+
+            // Hide home screen, show game screen
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            renderScoreboard();
+            renderControls();
+            setPlayer(1); // Set Player 1 as active by default
+        }
+
+        // Returns to the home screen
+        function endGame() {
+            if(confirm("Are you sure you want to end this game and return to the home screen?")) {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('home-screen').classList.remove('hidden');
+            }
+        }
 
         function renderScoreboard() {
             const tbody = document.getElementById('scoreboard-body');
@@ -201,19 +273,11 @@
             }
         }
 
-        function resetGame() {
-            if(confirm("Are you sure you want to reset the game? All scores will be lost.")) {
-                game = new CustomCricketScoring();
-                renderScoreboard();
-            }
-        }
-
         function renderControls() {
             const targetContainer = document.getElementById('target-buttons');
             targetContainer.innerHTML = '';
             game.validTargets.forEach(t => {
                 const label = t === 25 ? 'BULL' : t;
-                // Target buttons are slightly larger now for easier clicking
                 const activeClasses = t === selectedTarget ? 'bg-gray-100 text-gray-900 font-bold shadow-lg scale-105' : 'bg-gray-700 text-gray-300 hover:bg-gray-600';
                 targetContainer.innerHTML += `<button onclick="setTarget(${t})" class="py-4 text-xl rounded-lg transition-transform ${activeClasses}">${label}</button>`;
             });
@@ -232,10 +296,6 @@
                 `;
             }
         }
-
-        // Initialize App
-        renderScoreboard();
-        renderControls();
     </script>
 </body>
 </html>
